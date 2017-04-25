@@ -11,25 +11,52 @@ branchers = ['if', 'else', 'while', 'for', 'do']
 def separate_statements(code):
     raw_statements = []
     for line in code:
-        temp = line.split(';')
-        try:
-            temp.remove('\n')  # Remove 'empty' statements
-            temp.remove('')
-        except ValueError:
-            next
-        raw_statements = raw_statements + temp  # This should maintain order
+        temp = line.rstrip()
+        temp = temp.split(';')
+        for elem in temp:
+            elem = elem.lstrip()
+            if(not elem == ''):
+                raw_statements.append(elem)
     return raw_statements
 
 
 def identify_blocks(code):
-    pass
+    block_list = []
+    current_block = 0
+    block_list.append(Block())
+    for line in code:
+        block_list[current_block].add_lines(line.lstrip())
+        if(re.search("if", line)):
+            block_list.append(Block())
+            current_block = current_block + 1
+        elif(re.search("else", line)):
+            block_list.append(Block())
+            current_block = current_block + 1
+        elif(re.search("for", line)):
+            block_list.append(Block())
+            current_block = current_block + 1
+        elif(re.search("while", line)):
+            block_list.append(Block())
+            current_block = current_block + 1
+        elif(re.search("do", line)):
+            block_list.append(Block())
+            current_block = current_block + 1
+    print(current_block)
 
 
 class Block(object):
-    """docstring for Block"""
-    def __init__(self, name):
+    """A block object represents a control flow block."""
+
+    def __init__(self):
         super(Block, self).__init__()
-        self.name = name
+        self.lines = []
+        self.variables = []
+
+    def add_lines(self, lines):
+        self.lines.append(lines)
+
+    def add_variables(self, var):
+        self.varaibles.append(var)
 
 
 if __name__ == "__main__":
@@ -42,5 +69,6 @@ if __name__ == "__main__":
         print("Please provide a .txt file!")
         exit(1)
     with open(args.textfile) as code:
-        separate_statements(code)
+        line_by_line = separate_statements(code)
+    identify_blocks(line_by_line)
     exit(0)
