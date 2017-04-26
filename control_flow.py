@@ -27,47 +27,26 @@ def identify_blocks(code):
     current_block = 0
     block_list.append(Block())
     for line in code:
-        block_list[current_block].add_lines(line.lstrip())
         if(re.search("if", line)):
-            
-            #Template to be factored into new blocks of each type.
-            block_list.append(Block())
-            block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
-            block_list[current_block+1].set_id(current_block+1)
-            block_list[current_block+1].set_type("if") 
-            current_block = current_block + 1
+            block_list = create_block(block_list, current_block, "if", current_block+1) #Get new list with a new child block of current.
+            current_block += 1 #Increment current block.
 
         elif(re.search("else", line)):
-            
-            block_list.append(Block())
-            block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
-            block_list[current_block+1].set_id(current_block+1)
-            block_list[current_block+1].set_type("else") 
-            current_block = current_block + 1
+            block_list = create_block(block_list, current_block, "else", current_block+1) #Get new list with a new child block of current.
+            current_block += 1 #Increment current block.
 
         elif(re.search("for", line)):
-            
-            block_list.append(Block())
-            block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
-            block_list[current_block+1].set_id(current_block+1)
-            block_list[current_block+1].set_type("for") 
-            current_block = current_block + 1
+            block_list = create_block(block_list, current_block, "for", current_block+1) #Get new list with a new child block of current.
+            current_block += 1 #Increment current block.
 
         elif(re.search("while", line)):
-            
-            block_list.append(Block())
-            block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
-            block_list[current_block+1].set_id(current_block+1)
-            block_list[current_block+1].set_type("while") 
-            current_block = current_block + 1
+            block_list = create_block(block_list, current_block, "while", current_block+1) #Get new list with a new child block of current.
+            current_block += 1 #Increment current block.
 
         elif(re.search("do", line)):
-            
-            block_list.append(Block())
-            block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
-            block_list[current_block+1].set_id(current_block+1)
-            block_list[current_block+1].set_type("do") 
-            current_block = current_block + 1
+            block_list = create_block(block_list, current_block, "do", current_block+1) #Get new list with a new child block of current.
+            current_block += 1 #Increment current block.
+        block_list[current_block].add_lines(line.lstrip())
 
     print(current_block)
     return block_list
@@ -82,6 +61,14 @@ def to_dot_lang(block_list):
             result += block_prefix + str(block.id) + "->" + block_prefix + str(child.id) + "\n"
     return result
 
+def create_block(block_list, current_block, _type, _id):
+    """Creates a new block with the specified type and adds it to the list."""
+    new_block = Block()
+    new_block.set_id(_id)
+    new_block.set_type(_type) 
+    block_list[current_block].add_child(new_block) #Add the new block as a child of the current one
+    block_list.append(new_block)
+    return block_list
 
 class Block(object):
     """A block object represents a control flow block."""
