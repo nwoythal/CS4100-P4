@@ -27,7 +27,11 @@ def identify_blocks(code):
     for line in code:
         block_list[current_block].add_lines(line.lstrip())
         if(re.search("if", line)):
+            
+            #Template to be factored into new blocks of each type.
             block_list.append(Block())
+            block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
+            block_list[current_block+1].set_id(current_block+1)
             current_block = current_block + 1
         elif(re.search("else", line)):
             block_list.append(Block())
@@ -51,12 +55,25 @@ class Block(object):
         super(Block, self).__init__()
         self.lines = []
         self.variables = []
+        self.children = []
+        self.type = "normal"
+        self.id = 0
 
     def add_lines(self, lines):
         self.lines.append(lines)
 
     def add_variables(self, var):
-        self.varaibles.append(var)
+        self.variables.append(var)
+
+    def add_child(self, child):
+        self.children.append(child)
+
+    def set_type(self, t):
+        if((t not in branchers) or (t != "normal")):
+            raise ValueError, "Block type must be in normal or " + str(branchers)
+
+    def set_id(self, _id):
+        self.id = _id;
 
 
 if __name__ == "__main__":
@@ -71,4 +88,6 @@ if __name__ == "__main__":
     with open(args.textfile) as code:
         line_by_line = separate_statements(code)
     identify_blocks(line_by_line)
+    print(line_by_line)
     exit(0)
+    

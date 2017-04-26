@@ -1,0 +1,20 @@
+int johnathon = 0;
+int joeseidon = 2;
+int x = 0;
+int q = 9;
+int ohNo = 0;
+while(x < q) {
+    johnathon++
+    do {
+        ohNo++;
+    } while(ohNo < johnathon);
+    for(int i = johnathon; johnathon < joeseidon; johnathon++) {
+        x += johnathon;
+        q += joeseidon;
+        if(x < 100){
+            i -= 1;
+        }
+    }
+    q -= x;
+}
+return johnathon;
