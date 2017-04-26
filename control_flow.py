@@ -7,6 +7,8 @@ import re
 declarators = ['float', 'long', 'double', 'int', 'char', 'short', 'byte', 'extern', 'volatile']
 branchers = ['if', 'else', 'while', 'for', 'do']
 
+block_prefix = "B" #Prefix for changing numerical block id's into proper ones.
+
 
 def separate_statements(code):
     raw_statements = []
@@ -32,20 +34,53 @@ def identify_blocks(code):
             block_list.append(Block())
             block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
             block_list[current_block+1].set_id(current_block+1)
+            block_list[current_block+1].set_type("if") 
             current_block = current_block + 1
+
         elif(re.search("else", line)):
+            
             block_list.append(Block())
+            block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
+            block_list[current_block+1].set_id(current_block+1)
+            block_list[current_block+1].set_type("else") 
             current_block = current_block + 1
+
         elif(re.search("for", line)):
+            
             block_list.append(Block())
+            block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
+            block_list[current_block+1].set_id(current_block+1)
+            block_list[current_block+1].set_type("for") 
             current_block = current_block + 1
+
         elif(re.search("while", line)):
+            
             block_list.append(Block())
+            block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
+            block_list[current_block+1].set_id(current_block+1)
+            block_list[current_block+1].set_type("while") 
             current_block = current_block + 1
+
         elif(re.search("do", line)):
+            
             block_list.append(Block())
+            block_list[current_block].add_child(block_list[current_block+1]) #Add the new block as a child of the current one
+            block_list[current_block+1].set_id(current_block+1)
+            block_list[current_block+1].set_type("do") 
             current_block = current_block + 1
+
     print(current_block)
+    return block_list
+
+def to_dot_lang(block_list):
+    """Outputs the list of blocks in the dot language (graphviz)"""
+    result = ""
+    for block in block_list:
+        result += block_prefix + str(block.id) + str(block.lines) + "\n"
+    for block in block_list:
+        for child in block.children:
+            result += block_prefix + str(block.id) + "->" + block_prefix + str(child.id) + "\n"
+    return result
 
 
 class Block(object):
@@ -69,10 +104,10 @@ class Block(object):
         self.children.append(child)
 
     def set_type(self, t):
-        if((t not in branchers) or (t != "normal")):
-            raise ValueError, "Block type must be in normal or " + str(branchers)
+        if((t not in branchers) and (t != "normal")):
+            raise ValueError, "Block type must be in normal or " + str(branchers) + ", got " + t
         else:
-            type = t
+            self.type = t
 
     def set_id(self, _id):
         self.id = _id;
@@ -89,7 +124,7 @@ if __name__ == "__main__":
         exit(1)
     with open(args.textfile) as code:
         line_by_line = separate_statements(code)
-    identify_blocks(line_by_line)
-    print(line_by_line)
+    block_list = identify_blocks(line_by_line)
+    print(to_dot_lang(block_list))
     exit(0)
     
