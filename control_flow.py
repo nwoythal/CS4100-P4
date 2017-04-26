@@ -71,6 +71,8 @@ class Block(object):
     def set_type(self, t):
         if((t not in branchers) or (t != "normal")):
             raise ValueError, "Block type must be in normal or " + str(branchers)
+        else:
+            type = t
 
     def set_id(self, _id):
         self.id = _id;
