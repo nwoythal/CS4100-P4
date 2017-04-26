@@ -26,29 +26,13 @@ def identify_blocks(code):
     block_list = []
     current_block = 0
     block_list.append(Block())
+    s = re.compile(r"(?=("+'|'.join(branchers)+r"))") #Compile first for speed -- regex to match with any string in branchers
     for line in code:
-        if(re.search("if", line)):
-            block_list = create_block(block_list, current_block, "if", current_block+1) #Get new list with a new child block of current.
-            current_block += 1 #Increment current block.
-
-        elif(re.search("else", line)):
-            block_list = create_block(block_list, current_block, "else", current_block+1) #Get new list with a new child block of current.
-            current_block += 1 #Increment current block.
-
-        elif(re.search("for", line)):
-            block_list = create_block(block_list, current_block, "for", current_block+1) #Get new list with a new child block of current.
-            current_block += 1 #Increment current block.
-
-        elif(re.search("while", line)):
-            block_list = create_block(block_list, current_block, "while", current_block+1) #Get new list with a new child block of current.
-            current_block += 1 #Increment current block.
-
-        elif(re.search("do", line)):
-            block_list = create_block(block_list, current_block, "do", current_block+1) #Get new list with a new child block of current.
+        r = s.search(line)
+        if(r):
+            block_list = create_block(block_list, current_block, r.groups()[0], current_block+1) #Get new list with a new child block of current.
             current_block += 1 #Increment current block.
         block_list[current_block].add_lines(line.lstrip())
-
-    print(current_block)
     return block_list
 
 def to_dot_lang(block_list):
