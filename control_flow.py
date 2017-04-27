@@ -2,13 +2,13 @@
 
 import argparse
 import re
-import pdb
+# import pdb
 
 # Keep scope limited, don't do enums or typedefs or structs. Those may get complex.
 declarators = ['float', 'long', 'double', 'int', 'char', 'short', 'byte', 'extern', 'volatile']
 branchers = ['if', 'else', 'while', 'for', 'do', '}']
 
-block_prefix = "B" #Prefix for changing numerical block id's into proper ones.
+block_prefix = "B"  # Prefix for changing numerical block id's into proper ones.
 
 
 def separate_statements(code):
@@ -33,8 +33,8 @@ def identify_blocks(code):
         for branch in branchers:
             m = re.match("^" + branch, code[i])
             if(m):
-                block_list = create_block(block_list, current_block, branch, current_block + 1) #Get new list with a new child block of current.
-                current_block += 1 #Increment current block.
+                block_list = create_block(block_list, current_block, branch, current_block + 1)  # Get new list with a new child block of current.
+                current_block += 1  # Increment current block.
                 if(branch == 'for'):
                     block_list[current_block].add_lines(code[i].lstrip())
                     i += 1
@@ -44,8 +44,9 @@ def identify_blocks(code):
         i += 1
     return block_list
 
+
 def to_dot_lang(block_list):
-    """Outputs the list of blocks in the dot language (graphviz)"""
+    """Output the list of blocks in the dot language (graphviz)."""
     result = ""
     for block in block_list:
         result += block_prefix + str(block.id) + str(block.lines) + "\n"
@@ -54,14 +55,16 @@ def to_dot_lang(block_list):
             result += block_prefix + str(block.id) + "->" + block_prefix + str(child.id) + "\n"
     return result
 
+
 def create_block(block_list, current_block, _type, _id):
-    """Creates a new block with the specified type and adds it to the list."""
+    """Create a new block with the specified type and adds it to the list."""
     new_block = Block()
     new_block.set_id(_id)
     new_block.set_type(_type) 
-    block_list[current_block].add_child(new_block) #Add the new block as a child of the current one
+    block_list[current_block].add_child(new_block)  # Add the new block as a child of the current one
     block_list.append(new_block)
     return block_list
+
 
 class Block(object):
     """A block object represents a control flow block."""
@@ -85,12 +88,12 @@ class Block(object):
 
     def set_type(self, t):
         if((t not in branchers) and (t != "normal")):
-            raise ValueError, "Block type must be in normal or " + str(branchers) + ", got " + t
+            raise ValueError("Block type must be in normal or " + str(branchers) + ", got " + t)
         else:
             self.type = t
 
     def set_id(self, _id):
-        self.id = _id;
+        self.id = _id
 
 
 if __name__ == "__main__":
@@ -107,4 +110,3 @@ if __name__ == "__main__":
     block_list = identify_blocks(line_by_line)
     print(to_dot_lang(block_list))
     exit(0)
-    
