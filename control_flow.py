@@ -2,10 +2,11 @@
 
 import argparse
 import re
+import pdb
 
 # Keep scope limited, don't do enums or typedefs or structs. Those may get complex.
 declarators = ['float', 'long', 'double', 'int', 'char', 'short', 'byte', 'extern', 'volatile']
-branchers = ['if', 'else', 'while', 'for', 'do']
+branchers = ['if', 'else', 'while', 'for', 'do', '}']
 
 block_prefix = "B" #Prefix for changing numerical block id's into proper ones.
 
@@ -26,13 +27,21 @@ def identify_blocks(code):
     block_list = []
     current_block = 0
     block_list.append(Block())
-    s = re.compile(r"(?=("+'|'.join(branchers)+r"))") #Compile first for speed -- regex to match with any string in branchers
-    for line in code:
-        r = s.search(line)
-        if(r):
-            block_list = create_block(block_list, current_block, r.groups()[0], current_block+1) #Get new list with a new child block of current.
-            current_block += 1 #Increment current block.
-        block_list[current_block].add_lines(line.lstrip())
+    i = 0
+    # pdb.set_trace()
+    while(i < len(code) - 1):
+        for branch in branchers:
+            m = re.match("^" + branch, code[i])
+            if(m):
+                block_list = create_block(block_list, current_block, branch, current_block + 1) #Get new list with a new child block of current.
+                current_block += 1 #Increment current block.
+                if(branch == 'for'):
+                    block_list[current_block].add_lines(code[i].lstrip())
+                    i += 1
+                    block_list[current_block].add_lines(code[i].lstrip())
+                    i += 1
+        block_list[current_block].add_lines(code[i].lstrip())
+        i += 1
     return block_list
 
 def to_dot_lang(block_list):
