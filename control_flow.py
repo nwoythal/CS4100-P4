@@ -32,7 +32,7 @@ def identify_blocks(code):
     global depth
     while(i < len(code)):
         for branch in branchers:
-            m = re.match("^" + branch + r"\w*\(*", code[i])
+            m = re.match("^" + branch + r"\w*\(|^" + branch + r"$", code[i])
             if(m):
                 block_list = create_block(block_list, current_block, branch, current_block + 1)  # Get new list with a new child block of current.
                 current_block += 1  # Increment current block. 
