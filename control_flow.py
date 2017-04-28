@@ -2,7 +2,7 @@
 
 import argparse
 import re
-# import pdb
+import pdb
 
 # Keep scope limited, don't do enums or typedefs or structs. Those may get complex.
 declarators = ['float', 'long', 'double', 'int', 'char', 'short', 'byte', 'extern', 'volatile']
@@ -31,7 +31,7 @@ def identify_blocks(code):
     # pdb.set_trace()
     while(i < len(code) - 1):
         for branch in branchers:
-            m = re.match("^" + branch, code[i])
+            m = re.match("^" + branch + r"\w*\(", code[i])
             if(m):
                 block_list = create_block(block_list, current_block, branch, current_block + 1)  # Get new list with a new child block of current.
                 current_block += 1  # Increment current block.
@@ -52,7 +52,10 @@ def to_dot_lang(block_list):
         result += block_prefix + str(block.id) + str(block.lines) + "\n"
     for block in block_list:
         for child in block.children:
-            result += block_prefix + str(block.id) + "->" + block_prefix + str(child.id) + "\n"
+            try:
+                result += block_prefix + str(block.id) + "->" + block_prefix + str(child.id) + "\n"
+            except AttributeError:
+                pdb.set_trace()
     return result
 
 
@@ -95,6 +98,21 @@ class Block(object):
     def set_id(self, _id):
         self.id = _id
 
+    def is_empty(self):
+        return len(self.lines) == 0
+
+
+def clean_blocks(block_list):
+    for block in block_list:
+        for child in block.children:
+            for line in child.lines:
+                    if re.match(r"^({|})$", line):
+                        child.lines.remove(line)
+            if child.is_empty():
+                block.children += child.children
+                block.children.remove(child)
+                block_list.remove(child)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='''Pass in a code snippet contained in a 
@@ -108,5 +126,6 @@ if __name__ == "__main__":
     with open(args.textfile) as code:
         line_by_line = separate_statements(code)
     block_list = identify_blocks(line_by_line)
+    clean_blocks(block_list)
     print(to_dot_lang(block_list))
     exit(0)
