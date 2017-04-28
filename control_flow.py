@@ -6,9 +6,10 @@ import pdb
 
 # Keep scope limited, don't do enums or typedefs or structs. Those may get complex.
 declarators = ['float', 'long', 'double', 'int', 'char', 'short', 'byte', 'extern', 'volatile']
-branchers = ['if', 'else', 'while', 'for', 'do', '}']
+branchers = ['if', 'else', 'while', 'for', 'do', '}', '{']
 
 block_prefix = "B"  # Prefix for changing numerical block id's into proper ones.
+depth = 0
 
 
 def separate_statements(code):
@@ -28,18 +29,22 @@ def identify_blocks(code):
     current_block = 0
     block_list.append(Block())
     i = 0
-    # pdb.set_trace()
-    while(i < len(code) - 1):
+    global depth
+    while(i < len(code)):
         for branch in branchers:
-            m = re.match("^" + branch + r"\w*\(", code[i])
+            m = re.match("^" + branch + r"\w*\(*", code[i])
             if(m):
                 block_list = create_block(block_list, current_block, branch, current_block + 1)  # Get new list with a new child block of current.
-                current_block += 1  # Increment current block.
+                current_block += 1  # Increment current block. 
                 if(branch == 'for'):
                     block_list[current_block].add_lines(code[i].lstrip())
                     i += 1
                     block_list[current_block].add_lines(code[i].lstrip())
                     i += 1
+                elif(branch == "}"):
+                    depth -= 2
+                    block_list[current_block].set_scope()
+                depth += 1
         block_list[current_block].add_lines(code[i].lstrip())
         i += 1
     return block_list
@@ -47,15 +52,13 @@ def identify_blocks(code):
 
 def to_dot_lang(block_list):
     """Output the list of blocks in the dot language (graphviz)."""
+    # pdb.set_trace()
     result = ""
     for block in block_list:
         result += block_prefix + str(block.id) + str(block.lines) + "\n"
     for block in block_list:
         for child in block.children:
-            try:
                 result += block_prefix + str(block.id) + "->" + block_prefix + str(child.id) + "\n"
-            except AttributeError:
-                pdb.set_trace()
     return result
 
 
@@ -63,7 +66,8 @@ def create_block(block_list, current_block, _type, _id):
     """Create a new block with the specified type and adds it to the list."""
     new_block = Block()
     new_block.set_id(_id)
-    new_block.set_type(_type) 
+    new_block.set_type(_type)
+    new_block.set_scope()
     block_list[current_block].add_child(new_block)  # Add the new block as a child of the current one
     block_list.append(new_block)
     return block_list
@@ -75,16 +79,13 @@ class Block(object):
     def __init__(self):
         super(Block, self).__init__()
         self.lines = []
-        self.variables = []
         self.children = []
         self.type = "normal"
         self.id = 0
+        self.scope = 0
 
     def add_lines(self, lines):
         self.lines.append(lines)
-
-    def add_variables(self, var):
-        self.variables.append(var)
 
     def add_child(self, child):
         self.children.append(child)
@@ -98,11 +99,15 @@ class Block(object):
     def set_id(self, _id):
         self.id = _id
 
+    def set_scope(self):
+        self.scope = depth
+
     def is_empty(self):
         return len(self.lines) == 0
 
 
 def clean_blocks(block_list):
+    # pdb.set_trace()
     for block in block_list:
         for child in block.children:
             for line in child.lines:
@@ -112,6 +117,9 @@ def clean_blocks(block_list):
                 block.children += child.children
                 block.children.remove(child)
                 block_list.remove(child)
+        for grandchild in child.children:
+            if grandchild.scope == block.scope:
+                block.children.append(grandchild)
 
 
 if __name__ == "__main__":
