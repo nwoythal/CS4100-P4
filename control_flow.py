@@ -2,7 +2,6 @@
 
 import argparse
 import re
-import pdb
 
 # Keep scope limited, don't do enums or typedefs or structs. Those may get complex.
 declarators = ['float', 'long', 'double', 'int', 'char', 'short', 'byte', 'extern', 'volatile']
@@ -36,13 +35,13 @@ def identify_blocks(code):
             if(m):
                 block_list = create_block(block_list, current_block, branch, current_block + 1)  # Get new list with a new child block of current.
                 current_block += 1  # Increment current block. 
-                if(branch == 'for'):
+                if(branch == 'for'):  # Because we split on ';', for loops will ALWAYS be broken into three lines.
                     block_list[current_block].add_lines(code[i].lstrip())
                     i += 1
                     block_list[current_block].add_lines(code[i].lstrip())
                     i += 1
                 elif(branch == "}"):
-                    depth -= 2
+                    depth -= 2  # Decrease scope by two to offset for the one we add later.
                     block_list[current_block].set_scope()
                 depth += 1
         block_list[current_block].add_lines(code[i].lstrip())
@@ -52,7 +51,6 @@ def identify_blocks(code):
 
 def to_dot_lang(block_list):
     """Output the list of blocks in the dot language (graphviz)."""
-    # pdb.set_trace()
     result = ""
     for block in block_list:
         result += block_prefix + str(block.id) + str(block.lines) + "\n"
@@ -107,7 +105,7 @@ class Block(object):
 
 
 def clean_blocks(block_list):
-    # pdb.set_trace()
+    """Remove lines only containing '}' or '{', and create branches pointing to correct children."""
     for block in block_list:
         for child in block.children:
             for line in child.lines:
