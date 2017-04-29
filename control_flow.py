@@ -128,9 +128,9 @@ def clean_blocks(block_list):
                 block.children += child.children
                 block.children.remove(child)
                 block_list.remove(child)
-        for grandchild in child.children:
-            if grandchild.scope == block.scope:
-                block.children.append(grandchild)
+            for grandchild in child.children:
+                if grandchild.scope == block.scope:
+                    block.children.append(grandchild)
 
 
 if __name__ == "__main__":
