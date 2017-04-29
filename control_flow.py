@@ -29,9 +29,12 @@ def identify_blocks(code):
     block_list.append(Block())
     i = 0
     global depth
-    while(i < len(code)):
+    while(1):
         for branch in branchers:
-            m = re.match("^" + branch + r"\w*\(|^" + branch + r"$", code[i])
+            try:
+                m = re.match("^" + branch + r"\w*\(|^" + branch + r"$", code[i])
+            except Exception:
+                return block_list
             if(m):
                 block_list = create_block(block_list, current_block, branch, current_block + 1)  # Get new list with a new child block of current.
                 current_block += 1  # Increment current block. 
@@ -44,9 +47,18 @@ def identify_blocks(code):
                     depth -= 2  # Decrease scope by two to offset for the one we add later.
                     block_list[current_block].set_scope()
                 depth += 1
+                if(not (re.match(r"{$", code[i]) or (re.match(r"^{", code[i + 1])))):  # Catch statements with no curly braces
+                    block_list[current_block].add_lines(code[i].lstrip())  # Add initial statement
+                    i += 1
+                    block_list = create_block(block_list, current_block, branch, current_block + 1)  # Create new block for singlet
+                    current_block += 1
+                    block_list[current_block].add_lines(code[i].lstrip())  # Add singlet to block
+                    i += 1
+                    depth -= 1
+                    block_list = create_block(block_list, current_block, branch, current_block + 1)  # Create new block for following lines
+                    current_block += 1
         block_list[current_block].add_lines(code[i].lstrip())
         i += 1
-    return block_list
 
 
 def to_dot_lang(block_list):
@@ -109,8 +121,9 @@ def clean_blocks(block_list):
     for block in block_list:
         for child in block.children:
             for line in child.lines:
-                    if re.match(r"^({|})$", line):
-                        child.lines.remove(line)
+                if re.match(r"^({|})$", line):
+                    child.lines.remove(line)
+                line = line.rstrip('{')
             if child.is_empty():
                 block.children += child.children
                 block.children.remove(child)
