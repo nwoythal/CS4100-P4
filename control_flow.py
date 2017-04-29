@@ -2,6 +2,7 @@
 
 import argparse
 import re
+import pdb
 
 # Keep scope limited, don't do enums or typedefs or structs. Those may get complex.
 declarators = ['float', 'long', 'double', 'int', 'char', 'short', 'byte', 'extern', 'volatile']
@@ -29,12 +30,9 @@ def identify_blocks(code):
     block_list.append(Block())
     i = 0
     global depth
-    while(1):
+    while(i < len(code)):
         for branch in branchers:
-            try:
-                m = re.match("^" + branch + r"\w*\(|^" + branch + r"$", code[i])
-            except Exception:
-                return block_list
+            m = re.match("^" + branch + r"\w*\(|^" + branch + r"$", code[i])
             if(m):
                 block_list = create_block(block_list, current_block, branch, current_block + 1)  # Get new list with a new child block of current.
                 current_block += 1  # Increment current block. 
@@ -47,7 +45,8 @@ def identify_blocks(code):
                     depth -= 2  # Decrease scope by two to offset for the one we add later.
                     block_list[current_block].set_scope()
                 depth += 1
-                if(not (re.match(r"{$", code[i]) or (re.match(r"^{", code[i + 1])))):  # Catch statements with no curly braces
+                # pdb.set_trace()
+                if(not (re.match(r"{$", code[i]) or (re.match(r"^{", code[i + 1]))) and (branch != "{" and branch != "}")):  # Catch statements with no curly braces
                     block_list[current_block].add_lines(code[i].lstrip())  # Add initial statement
                     i += 1
                     block_list = create_block(block_list, current_block, branch, current_block + 1)  # Create new block for singlet
@@ -59,6 +58,7 @@ def identify_blocks(code):
                     current_block += 1
         block_list[current_block].add_lines(code[i].lstrip())
         i += 1
+    return block_list
 
 
 def to_dot_lang(block_list):
