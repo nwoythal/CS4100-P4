@@ -3,6 +3,7 @@
 import argparse
 import re
 import pdb
+import graphviz as gv
 
 # Keep scope limited, don't do enums or typedefs or structs. Those may get complex.
 declarators = ['float', 'long', 'double', 'int', 'char', 'short', 'byte', 'extern', 'volatile']
@@ -70,13 +71,23 @@ def identify_blocks(code):
 
 def to_dot_lang(block_list):
     """Output the list of blocks in the dot language (graphviz)."""
-    result = ""
+    result = "digraph CFG {\n"
     for block in block_list:
-        result += block_prefix + str(block.id) + str(block.lines) + "\n"
+        result += "\t" + block_prefix + str(block.id) + "[label=\"" + "; ".join(block.lines) + "\"]\n"
     for block in block_list:
         for child in block.children:
-                result += block_prefix + str(block.id) + "->" + block_prefix + str(child.id) + "\n"
-    return result
+                result += "\t" + block_prefix + str(block.id) + "->" + block_prefix + str(child.id) + "\n"
+    return result + "}"
+
+def render_block_list(block_list, path):
+    """Output the list of blocks in the dot language (graphviz)."""
+    result = gv.Digraph(name="Control Flow Graph")
+    for block in block_list:
+        result.node(block_prefix + str(block.id), "; ".join(block.lines))
+    for block in block_list:
+        for child in block.children:
+                result.edge(block_prefix + str(block.id), block_prefix + str(child.id))
+    result.render(path, view=True)
 
 
 def create_block(block_list, current_block, _type, _id):
@@ -165,5 +176,7 @@ if __name__ == "__main__":
         line_by_line = separate_statements(code)
     block_list = identify_blocks(line_by_line)
     clean_blocks(block_list)
-    print(to_dot_lang(block_list))
+    s = to_dot_lang(block_list)
+    print(s)
+    render_block_list(block_list, 'test-output/render.gv')
     exit(0)

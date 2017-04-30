@@ -1,0 +1,18 @@
+digraph "Control Flow Graph" {
+	B0 [label="int johnathon = 0; int joeseidon = 2; int x = 0; int q = 9; int ohNo = 0"]
+	B1 [label="while(x < q); johnathon++; do; ohNo++; } while(ohNo < johnathon)"]
+	B2 [label="for(int i = johnathon; johnathon < joeseidon; johnathon++)"]
+	B3 [label="x += johnathon; q += joeseidon"]
+	B4 [label="if(x < 100); i -= 1"]
+	B6 [label="q -= x"]
+	B7 [label="return johnathon"]
+		B0 -> B1
+		B1 -> B2
+		B1 -> B6
+		B2 -> B3
+		B2 -> B4
+		B3 -> B4
+		B4 -> B6
+		B4 -> B7
+		B6 -> B7
+}
