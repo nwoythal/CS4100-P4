@@ -41,21 +41,14 @@ def identify_blocks(code):
                     i += 1
                     block_list[current_block].add_lines(code[i].lstrip())
                     i += 1
+                    block_list[current_block].add_lines(code[i].lstrip())
+                    i += 1
+                    block_list = create_block(block_list, current_block, branch, current_block + 1)
+                    current_block += 1  # Increment current block. 
                 elif(branch == "}"):
                     depth -= 2  # Decrease scope by two to offset for the one we add later.
                     block_list[current_block].set_scope()
                 depth += 1
-                # pdb.set_trace()
-                if(not (re.match(r"{$", code[i]) or (re.match(r"^{", code[i + 1]))) and (branch != "{" and branch != "}")):  # Catch statements with no curly braces
-                    block_list[current_block].add_lines(code[i].lstrip())  # Add initial statement
-                    i += 1
-                    block_list = create_block(block_list, current_block, branch, current_block + 1)  # Create new block for singlet
-                    current_block += 1
-                    block_list[current_block].add_lines(code[i].lstrip())  # Add singlet to block
-                    i += 1
-                    depth -= 1
-                    block_list = create_block(block_list, current_block, branch, current_block + 1)  # Create new block for following lines
-                    current_block += 1
         block_list[current_block].add_lines(code[i].lstrip())
         i += 1
     return block_list
@@ -119,18 +112,27 @@ class Block(object):
 def clean_blocks(block_list):
     """Remove lines only containing '}' or '{', and create branches pointing to correct children."""
     for block in block_list:
-        for child in block.children:
-            for line in child.lines:
-                if re.match(r"^({|})$", line):
-                    child.lines.remove(line)
-                line = line.rstrip('{')
-            if child.is_empty():
-                block.children += child.children
-                block.children.remove(child)
-                block_list.remove(child)
-            for grandchild in child.children:
-                if grandchild.scope == block.scope:
-                    block.children.append(grandchild)
+        line_count = len(block.lines)
+        i = 0
+        while i < line_count:
+            block.lines[i] = block.lines[i].rstrip('{').rstrip('}').rstrip().rstrip('{')
+            if not block.lines[i]:
+                block.lines.remove(block.lines[i])
+                line_count -= 1
+            i += 1
+    for block in block_list:
+        if block.is_empty():
+            block_list.remove(block)
+    assign_children(block_list)
+
+def assign_children(block_list):
+    for i in range(len(block_list)):
+        if block_list[i].type in branchers:
+            for j in range(i + 2, len(block_list)):
+                if block_list[j].scope <= block_list[i].scope:
+                    pdb.set_trace()
+                    block_list[i].children.append(block_list[j])
+                    break
 
 
 if __name__ == "__main__":
@@ -148,3 +150,17 @@ if __name__ == "__main__":
     clean_blocks(block_list)
     print(to_dot_lang(block_list))
     exit(0)
+
+
+
+
+                    # if(not (re.match(r".*{$", code[i]) or (re.match(r"^{", code[i + 1]))) and (branch != "{" and branch != "}")):  # Catch statements with no curly braces
+                    # block_list[current_block].add_lines(code[i].lstrip())  # Add initial statement
+                    # i += 1
+                    # block_list = create_block(block_list, current_block, branch, current_block + 1)  # Create new block for singlet
+                    # current_block += 1
+                    # block_list[current_block].add_lines(code[i].lstrip())  # Add singlet to block
+                    # i += 1
+                    # depth -= 1
+                    # block_list = create_block(block_list, current_block, branch, current_block + 1)  # Create new block for following lines
+                    # current_block += 1
