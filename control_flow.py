@@ -52,12 +52,15 @@ def identify_blocks(code):
                     block_list[current_block].set_scope()
                 if( not (re.search('{', code[i]) or re.search('{', code[i + 1])) and branch != '}'):
                     block_list[current_block].add_lines(code[i].lstrip())
+                    depth += 1
                     block_list = create_block(block_list, current_block, branch, current_block + 1)
                     current_block += 1
-                    depth += 1
                     i += 1
                     block_list[current_block].add_lines(code[i].lstrip())
-                    depth -= 1
+                    depth -= 2
+                    block_list = create_block(block_list, current_block, branch, current_block + 1)
+                    current_block += 1
+                    i += 1
                 depth += 1
         if(code[i].lstrip() not in block_list[current_block].lines):                
             block_list[current_block].add_lines(code[i].lstrip())
