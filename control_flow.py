@@ -178,5 +178,9 @@ if __name__ == "__main__":
     clean_blocks(block_list)
     s = to_dot_lang(block_list)
     print(s)
-    render_block_list(block_list, 'test-output/render.gv')
-    exit(0)
+    try:
+        render_block_list(block_list, 'test-output/render.gv')
+    except RuntimeError:
+        print("It looks like graphviz isn't installed on your system, or the path variable isn't configured correctly.")
+    finally:
+        exit(0)
