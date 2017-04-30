@@ -48,8 +48,17 @@ def identify_blocks(code):
                 elif(branch == "}"):
                     depth -= 2  # Decrease scope by two to offset for the one we add later.
                     block_list[current_block].set_scope()
+                if( not re.search('{', code[i]), re.search('{', code[i + 1])):
+                    block_list[current_block].add_lines(code[i].lstrip())
+                    block_list = create_block(block_list, current_block, branch, current_block + 1)  # Get new list with a new child block of current.
+                    current_block += 1  # Increment current block. 
+                    depth += 1
+                    i += 1
+                    block_list[current_block].add_lines(code[i].lstrip())
+                    depth -= 1
                 depth += 1
-        block_list[current_block].add_lines(code[i].lstrip())
+        if(code[i].lstrip() not in block_list[current_block].lines):                
+            block_list[current_block].add_lines(code[i].lstrip())
         i += 1
     return block_list
 
@@ -127,10 +136,13 @@ def clean_blocks(block_list):
 
 def assign_children(block_list):
     for i in range(len(block_list)):
+        for child in block_list[i].children:
+            if(child.is_empty()):
+                block_list[i].children.extend(child.children)
+                block_list[i].children.remove(child)
         if block_list[i].type in branchers:
             for j in range(i + 2, len(block_list)):
                 if block_list[j].scope <= block_list[i].scope:
-                    pdb.set_trace()
                     block_list[i].children.append(block_list[j])
                     break
 
@@ -150,9 +162,6 @@ if __name__ == "__main__":
     clean_blocks(block_list)
     print(to_dot_lang(block_list))
     exit(0)
-
-
-
 
                     # if(not (re.match(r".*{$", code[i]) or (re.match(r"^{", code[i + 1]))) and (branch != "{" and branch != "}")):  # Catch statements with no curly braces
                     # block_list[current_block].add_lines(code[i].lstrip())  # Add initial statement
