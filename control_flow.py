@@ -43,15 +43,17 @@ def identify_blocks(code):
                     i += 1
                     block_list[current_block].add_lines(code[i].lstrip())
                     i += 1
-                    block_list = create_block(block_list, current_block, branch, current_block + 1)
+                    block_list = create_block(block_list, current_block, 'normal', current_block + 1)
                     current_block += 1  # Increment current block. 
+                    block_list[current_block].add_lines(code[i].lstrip())
+                    break
                 elif(branch == "}"):
                     depth -= 2  # Decrease scope by two to offset for the one we add later.
                     block_list[current_block].set_scope()
-                if( not re.search('{', code[i]), re.search('{', code[i + 1])):
+                if( not (re.search('{', code[i]) or re.search('{', code[i + 1])) and branch != '}'):
                     block_list[current_block].add_lines(code[i].lstrip())
-                    block_list = create_block(block_list, current_block, branch, current_block + 1)  # Get new list with a new child block of current.
-                    current_block += 1  # Increment current block. 
+                    block_list = create_block(block_list, current_block, branch, current_block + 1)
+                    current_block += 1
                     depth += 1
                     i += 1
                     block_list[current_block].add_lines(code[i].lstrip())
@@ -162,14 +164,3 @@ if __name__ == "__main__":
     clean_blocks(block_list)
     print(to_dot_lang(block_list))
     exit(0)
-
-                    # if(not (re.match(r".*{$", code[i]) or (re.match(r"^{", code[i + 1]))) and (branch != "{" and branch != "}")):  # Catch statements with no curly braces
-                    # block_list[current_block].add_lines(code[i].lstrip())  # Add initial statement
-                    # i += 1
-                    # block_list = create_block(block_list, current_block, branch, current_block + 1)  # Create new block for singlet
-                    # current_block += 1
-                    # block_list[current_block].add_lines(code[i].lstrip())  # Add singlet to block
-                    # i += 1
-                    # depth -= 1
-                    # block_list = create_block(block_list, current_block, branch, current_block + 1)  # Create new block for following lines
-                    # current_block += 1
