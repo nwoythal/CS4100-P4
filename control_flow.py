@@ -51,7 +51,8 @@ def identify_blocks(code):
                 elif(branch == "}"):
                     depth -= 2  # Decrease scope by two to offset for the one we add later.
                     block_list[current_block].set_scope()
-                if( not (re.search('{', code[i]) or re.search('{', code[i + 1])) and branch != '}'):
+                # pdb.set_trace()
+                if(branch != '}' and (i + 1 <= len(code)) and not (re.search('{', code[i]) or re.search('{', code[i + 1]))):
                     block_list[current_block].add_lines(code[i].lstrip())
                     depth += 1
                     block_list = create_block(block_list, current_block, branch, current_block + 1)
@@ -78,6 +79,7 @@ def to_dot_lang(block_list):
         for child in block.children:
                 result += "\t" + block_prefix + str(block.id) + "->" + block_prefix + str(child.id) + "\n"
     return result + "}"
+
 
 def render_block_list(block_list, path):
     """Output the list of blocks in the dot language (graphviz)."""
@@ -140,7 +142,7 @@ def clean_blocks(block_list):
         line_count = len(block.lines)
         i = 0
         while i < line_count:
-            block.lines[i] = block.lines[i].rstrip('{').rstrip('}').rstrip().rstrip('{')
+            block.lines[i] = block.lines[i].rstrip('{').rstrip('}').rstrip().lstrip('}')
             if not block.lines[i]:
                 block.lines.remove(block.lines[i])
                 line_count -= 1
@@ -150,10 +152,10 @@ def clean_blocks(block_list):
             block_list.remove(block)
     assign_children(block_list)
 
+
 def assign_children(block_list):
     for i in range(len(block_list)):
         for child in block_list[i].children:
-            # pdb.set_trace()
             if(child.is_empty()):
                 block_list[i].children.extend(child.children)
                 block_list[i].children.remove(child)
