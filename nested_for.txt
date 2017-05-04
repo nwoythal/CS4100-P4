@@ -1,5 +1,7 @@
-for(int i=0; i<10; i++){
-    for(int j=0; j<10; j++){
-        do_thing();
+int i = 0;
+for(i = 0; i < 10; i++) {
+    for(int j=0; j < 10 ; j++) {
+        i = j + i;
     }
 }
+return i;

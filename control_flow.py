@@ -162,7 +162,10 @@ def assign_children(block_list):
             if(block_list[i].type == "for" or block_list[i].type == "while" or block_list[i].type == "do"):
                 child.children.append(block_list[i])
             if(block_list[i].type == "normal" and (child.type == "normal" or child.type == "}")):
-                block_list[i].children.remove(child)
+                try:
+                    block_list[i].children.remove(child)
+                except ValueError:
+                    pass
         if block_list[i].type in branchers:
             for j in range(i + 2, len(block_list)):
                 if block_list[j].scope <= block_list[i].scope:
